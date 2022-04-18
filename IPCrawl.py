@@ -2,10 +2,41 @@ import requests
 import random
 import time
 import json
-from xmlx import etree
+from lxml import etree
 from redis import Redis
 from bs4 import BeautifulSoup
 import copy
+headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/98.0.4758.102 Safari/537.36',
+        }
+# 测试ip的URL
+url_for_test ='http://httpbin.org/ip'
+conn = Redis(host='localhost',port=6379)
+
+def get_random_ip():
+    '''
+    随机取出一个ip
+    '''
+    useful_proxy_list_bytes = list(conn.smembers('Proxies'))
+    useful_proxy_list = []
+    for bytes in useful_proxy_list_bytes:
+        bytes = bytes.decode('utf-8')
+        useful_proxy_list.append(bytes)
+    print(useful_proxy_list)
+    useful_proxy = random.choice(useful_proxy_list)
+    proxy = {
+        'http': str(useful_proxy),
+    }
+    try:
+        response = requests.get(url_for_test, headers=headers, proxies=proxy, timeout=5)
+        if response.status_code == 200:
+            print('此ip未失效:', useful_proxy)
+            return useful_proxy
+    except Exception as e:
+        print('此ip已失效:', useful_proxy)
+        conn.srem('Proxies', useful_proxy)
+        print('已经从Redis移除')
+        get_random_ip()
 
 #IP66代理
 class Ip66Proxy():
@@ -25,7 +56,7 @@ class Ip66Proxy():
                 'http': '150.109.32.166:80',  #'http://'+
                 }
         #本次更新条数
-    def scrawl_ip66_ip(self,num):
+    def crawl_ip66_ip(self,num):
         '''
         爬取代理ip地址
         '''
@@ -107,7 +138,7 @@ class Ip66Proxy():
             self.get_random_ip()
     def proxy_to_redis(self):
         #爬取代理ip1页
-        ip_info = self.scrawl_ip66_ip(1)
+        ip_info = self.crawl_ip66_ip(1)
         #测试ip是否可用并存储至redis
         self.ip_test(self.url_for_test,ip_info)
 
@@ -127,7 +158,7 @@ class FatezeroIP():
         self.proxies ={
                 'http': '150.109.32.166:80',  #'http://'+
                 }
-    def scrawl_fatezero_ip(self,num):
+    def crawl_fatezero_ip(self,num):
         '''
         爬取代理ip地址
         '''
@@ -209,7 +240,7 @@ class FatezeroIP():
             self.get_random_ip()
     def proxy_to_redis(self):
         #爬取代理ip1页
-        ip_info = self.scrawl_fatezero_ip(1)
+        ip_info = self.crawl_fatezero_ip(1)
         #测试ip是否可用并存储至redis
         self.ip_test(self.url_for_test,ip_info)
 
@@ -230,7 +261,7 @@ class Ip3366():
         self.proxies ={
                 'http': '150.109.32.166:80',  #'http://'+
                 }
-    def scrawl_3366_ip(self,num):
+    def crawl_3366_ip(self,num):
         '''
         爬取代理ip地址
         '''
@@ -314,7 +345,7 @@ class Ip3366():
             self.get_random_ip()
     def proxy_to_redis(self):
         #爬取代理ip5页
-        ip_info = self.scrawl_3366_ip(1)
+        ip_info = self.crawl_3366_ip(1)
         #测试ip是否可用并存储至redis
         self.ip_test(self.url_for_test,ip_info)
 
@@ -334,7 +365,7 @@ class JiangxianliIP():
         self.proxies ={
                 'http': '150.109.32.166:80',  #'http://'+
                 }
-    def scrawl_jiangxianli_ip(self,num):
+    def crawl_jiangxianli_ip(self,num):
         '''
         爬取代理ip地址
         '''
@@ -420,7 +451,7 @@ class JiangxianliIP():
             self.get_random_ip()
     def proxy_to_redis(self):
         #爬取代理ip5页
-        ip_info = self.scrawl_jiangxianli_ip(1)
+        ip_info = self.crawl_jiangxianli_ip(1)
         #测试ip是否可用并存储至redis
         self.ip_test(self.url_for_test,ip_info)
 
@@ -438,7 +469,7 @@ class KuaidailiProxy():
                 'http': '150.109.32.166:80',  #'http://'+
                 }
         #本次更新条数
-    def scrawl_kuai_ip(self,num):
+    def crawl_kuai_ip(self,num):
         '''
         爬取代理ip地址
         '''
@@ -521,7 +552,7 @@ class KuaidailiProxy():
             self.get_random_ip()
     def proxy_to_redis(self):
         #爬取代理ip5页
-        ip_info = self.scrawl_kuai_ip(5)
+        ip_info = self.crawl_kuai_ip(5)
         #测试ip是否可用并存储至redis
         self.ip_test(self.url_for_test,ip_info)
 
@@ -540,7 +571,7 @@ class SeofangfaProxy():
         self.proxies ={
                 'http': '150.109.32.166:80',  #'http://'+
                 }
-    def scrawl_seofangfa_ip(self,num):
+    def crawl_seofangfa_ip(self,num):
         '''
         爬取代理ip地址
         '''
@@ -621,7 +652,7 @@ class SeofangfaProxy():
             self.get_random_ip()
     def proxy_to_redis(self):
         #爬取代理ip5页
-        ip_info = self.scrawl_jiangxianli_ip(1)
+        ip_info = self.crawl_jiangxianli_ip(1)
         #测试ip是否可用并存储至redis
         self.ip_test(self.url_for_test,ip_info)
 
@@ -638,7 +669,7 @@ class TaiyangProxy():
         self.proxies ={
                 'http': '150.109.32.166:80',  #'http://'+
                 }
-    def scrawl_taiyang_ip(self,num):
+    def crawl_taiyang_ip(self,num):
         '''
         爬取代理ip地址
         '''
@@ -721,7 +752,7 @@ class TaiyangProxy():
             self.get_random_ip()
     def proxy_to_redis(self):
         #爬取代理ip5页
-        ip_info = self.scrawl_taiyang_ip(5)
+        ip_info = self.crawl_taiyang_ip(5)
         #测试ip是否可用并存储至redis
         self.ip_test(self.url_for_test,ip_info)
 
@@ -741,7 +772,7 @@ class YqieProxy():
         self.proxies ={
                 'http': '150.109.32.166:80',  #'http://'+
                 }
-    def scrawl_yqieIP_ip(self,num):
+    def crawl_yqieIP_ip(self,num):
         '''
         爬取代理ip地址
         '''
@@ -827,7 +858,7 @@ class YqieProxy():
             self.get_random_ip()
     def proxy_to_redis(self):
         #爬取代理ip1页
-        ip_info = self.scrawl_yqieIP_ip(1)
+        ip_info = self.crawl_yqieIP_ip(1)
         #测试ip是否可用并存储至redis
         self.ip_test(self.url_for_test,ip_info)
 
@@ -943,3 +974,4 @@ class ZdayeProxy():
         self.parse_ip(self.url_list[0])
         print(self.ip_list)
         self.ip_test(self.url_for_test,self.ip_list)
+get_random_ip()
